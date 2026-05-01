@@ -1,0 +1,492 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+}
+
+model User {
+  id           String            @id @default(cuid())
+  username     String?           @unique
+  email        String            @unique
+  passwordHash String
+  role         UserRole          @default(USER)
+  isActive     Boolean           @default(true)
+  passenger    PassengerProfile?
+  driver       DriverProfile?
+  creditAccount CreditAccount?
+  pushTokens   PushToken[]
+  passwordResets PasswordResetRequest[]
+  sentRatings  Rating[]          @relation("ratings_from")
+  recvRatings  Rating[]          @relation("ratings_to")
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
+
+model PasswordResetRequest {
+  id         String   @id @default(cuid())
+  userId     String
+  role       UserRole
+  phoneRaw   String
+  phoneLast3 String
+  code       String
+  sentAt     DateTime?
+  verifiedAt DateTime?
+  consumedAt DateTime?
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([expiresAt, consumedAt])
+}
+
+model PushToken {
+  id        String       @id @default(cuid())
+  userId    String
+  token     String       @unique
+  platform  PushPlatform
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+
+  @@index([userId])
+}
+
+model PassengerProfile {
+  id        String        @id @default(cuid())
+  userId    String        @unique
+  fullName  String
+  firstName String?
+  lastName  String?
+  phone     String
+  homeAddress String?
+  age       Int?
+  photoUrl  String?
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rides     RideRequest[]
+  offers    RideOffer[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model DriverProfile {
+  id           String           @id @default(cuid())
+  userId       String           @unique
+  fullName     String
+  firstName    String?
+  lastName     String?
+  phone        String
+  // Pago móvil (strings tal cual, editable por admin/chofer)
+  mobilePayBank     String?
+  mobilePayDocument String?
+  mobilePayPhone    String?
+  photoUrl     String
+  serviceType  ServiceType
+  homeAddress  String?
+  age          Int?
+  // Si el descuento al finalizar es "monto fijo", este valor (COP) aplica por conductor.
+  creditChargeFixedCop Int?
+  status       DriverStatus     @default(APPROVED)
+  isAvailable  Boolean          @default(false)
+  location     DriverLocation?
+  vehicle      Vehicle?
+  documents    DriverDocument[]
+  matchedRides RideRequest[]    @relation("ride_matched_driver")
+  committedOffers RideOffer[]   @relation("offer_committed_driver")
+  rideCandidates RideCandidate[]
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+}
+
+model AppConfig {
+  id String @id @default("global")
+
+  // Descuento automático de créditos al chofer al completar el servicio.
+  // SERVICE_VALUE: descuenta lo que valga el servicio.
+  // FIXED_AMOUNT: descuenta un monto fijo por carrera definido por conductor.
+  driverCreditChargeMode DriverCreditChargeMode @default(SERVICE_VALUE)
+
+  // Comisión global (%). Si es > 0, se usa en lugar de driverCreditChargeMode.
+  driverCreditChargePercent Decimal @db.Decimal(5, 2) @default(0)
+
+  // Tasas de referencia para mostrar montos secundarios.
+  // Interpreta como: cuántos COP equivalen a 1 unidad de la moneda.
+  // Ej: fxCopPerUsd=4000 => 10.000 COP = 2.5 USD
+  fxCopPerUsd Decimal @db.Decimal(18, 6) @default(0)
+  // Ej: fxCopPerVes=120 => 10.000 COP = 83.33 Bs
+  fxCopPerVes Decimal @db.Decimal(18, 6) @default(0)
+
+  // Radio global de emparejamiento entre clientes y choferes.
+  matchingRadiusM Int @default(2000)
+
+  // WhatsApp operador (ZOE) y datos de pago (visible al cliente)
+  zoeWhatsappPhone String? @db.Text
+
+  paymentBancolombiaHolder String? @db.Text
+  paymentBancolombiaDocument String? @db.Text
+  paymentBancolombiaAccountType String? @db.Text
+  paymentBancolombiaAccountNumber String? @db.Text
+
+  paymentZelleHolder String? @db.Text
+  paymentZelleEmail String? @db.Text
+  paymentZellePhone String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DriverLocation {
+  id        String        @id @default(cuid())
+  driverId  String        @unique
+  lat       Decimal       @db.Decimal(10, 7)
+  lng       Decimal       @db.Decimal(10, 7)
+  updatedAt DateTime      @updatedAt
+  driver    DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([lat, lng])
+  @@index([updatedAt])
+}
+
+model Vehicle {
+  id         String        @id @default(cuid())
+  driverId   String        @unique
+  brand      String
+  model      String
+  plate      String?
+  year       Int
+  color      String
+  doors      Int?
+  hasAC      Boolean       @default(false)
+  hasTrunk   Boolean       @default(false)
+  allowsPets Boolean       @default(false)
+  driver     DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+}
+
+model DriverDocument {
+  id        String        @id @default(cuid())
+  driverId  String
+  type      DocumentType
+  url       String
+  driver    DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+
+  @@index([driverId, type])
+}
+
+model PricingConfig {
+  id             String      @id @default(cuid())
+  serviceType    ServiceType @unique
+  baseFare       Decimal     @db.Decimal(10, 2)
+  // Tarifa base nocturna por tipo. Si es 0, no se aplica tarifa nocturna.
+  nightBaseFare  Decimal     @db.Decimal(10, 2) @default(0)
+  // Hora desde la cual se aplica la tarifa nocturna (0-23) para este tipo.
+  // Si no se configura explícitamente, queda en 20 (fallback histórico).
+  nightStartHour Int         @default(20)
+  // Hora hasta la cual se aplica la tarifa nocturna (0-23) para este tipo.
+  // Default 23 para mantener compatibilidad histórica (antes era: desde start hasta fin del día).
+  nightEndHour   Int         @default(23)
+  perKm          Decimal     @db.Decimal(10, 2)
+
+  // Nuevo modo de tarifa por tramos.
+  // Si stepMeters > 0 y stepPrice > 0, se cobra:
+  // baseFare + ceil(max(0, distanceMeters - includedMeters) / stepMeters) * stepPrice
+  includedMeters Int         @default(0)
+  stepMeters     Int         @default(0)
+  stepPrice      Decimal     @db.Decimal(10, 2) @default(0)
+
+  acSurcharge    Decimal     @db.Decimal(10, 2)
+  trunkSurcharge Decimal     @db.Decimal(10, 2)
+  petsSurcharge  Decimal     @db.Decimal(10, 2)
+  addons         PricingAddon[]
+  updatedAt      DateTime    @updatedAt
+  createdAt      DateTime    @default(now())
+}
+
+model PricingAddon {
+  id          String      @id @default(cuid())
+  serviceType ServiceType
+  name        String
+  amount      Decimal     @db.Decimal(10, 2)
+  isActive    Boolean     @default(true)
+  pricing     PricingConfig @relation(fields: [serviceType], references: [serviceType], onDelete: Cascade)
+  rideAddons  RideAddon[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([serviceType, name])
+  @@index([serviceType, isActive])
+}
+
+model CreditAccount {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  balanceCop Int      @default(0)
+  lowCreditsPushSentAt DateTime?
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model RideRequest {
+  id                String      @id @default(cuid())
+  passengerId       String
+  serviceTypeWanted ServiceType
+  pickupLat         Decimal     @db.Decimal(10, 7)
+  pickupLng         Decimal     @db.Decimal(10, 7)
+  pickupAddress     String?
+  dropoffLat        Decimal     @db.Decimal(10, 7)
+  dropoffLng        Decimal     @db.Decimal(10, 7)
+  dropoffAddress    String?
+  distanceMeters    Int?
+  durationSeconds   Int?
+  routePath         Json?
+  wantsAC           Boolean     @default(false)
+  wantsTrunk        Boolean     @default(false)
+  wantsPets         Boolean     @default(false)
+  estimatedPrice    Decimal     @db.Decimal(10, 2)
+  agreedPrice       Decimal?    @db.Decimal(10, 2)
+  addons            RideAddon[]
+
+  pricingBaseFare       Decimal? @db.Decimal(10, 2)
+  pricingPerKm          Decimal? @db.Decimal(10, 2)
+  pricingIncludedMeters Int?
+  pricingStepMeters     Int?
+  pricingStepPrice      Decimal? @db.Decimal(10, 2)
+  pricingAcSurcharge    Decimal? @db.Decimal(10, 2)
+  pricingTrunkSurcharge Decimal? @db.Decimal(10, 2)
+  pricingPetsSurcharge  Decimal? @db.Decimal(10, 2)
+
+  // Precio fijo por zona (ej: San Cristóbal <-> zona externa)
+  isFixedPrice      Boolean     @default(false)
+  fixedPriceCop     Decimal?    @db.Decimal(10, 2)
+  fixedHubZoneId    String?
+  fixedTargetZoneId String?
+
+  meterDistanceMeters Int              @default(0)
+  meterPrice          Decimal          @default(0) @db.Decimal(10, 2)
+  searchRadiusM       Int              @default(2000)
+  status              RideStatus       @default(OPEN)
+  expiresAt           DateTime?
+  matchedDriverId     String?
+  matchedAt           DateTime?
+  acceptedAt          DateTime?
+  driverArrivedNotifiedAt DateTime?
+  assignedByAdmin     Boolean     @default(false)
+  startedAt           DateTime?
+  completedAt         DateTime?
+  driverCreditChargedCop Int?
+  driverCreditChargedAt  DateTime?
+  passengerCompletedConfirmedAt DateTime?
+  driverCompletedConfirmedAt    DateTime?
+  passenger           PassengerProfile @relation(fields: [passengerId], references: [id], onDelete: Cascade)
+  matchedDriver       DriverProfile?   @relation("ride_matched_driver", fields: [matchedDriverId], references: [id])
+  fixedHubZone        Zone?            @relation("ride_fixed_hub_zone", fields: [fixedHubZoneId], references: [id], onDelete: SetNull)
+  fixedTargetZone     Zone?            @relation("ride_fixed_target_zone", fields: [fixedTargetZoneId], references: [id], onDelete: SetNull)
+  offer               RideOffer?       @relation("offer_to_ride")
+  candidates          RideCandidate[]
+  ratings             Rating[]
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  @@index([passengerId, status])
+  @@index([matchedDriverId])
+  @@index([isFixedPrice])
+  @@index([fixedHubZoneId])
+  @@index([fixedTargetZoneId])
+}
+
+model Zone {
+  id       String  @id @default(cuid())
+  name     String
+  isHub    Boolean @default(false)
+  isActive Boolean @default(true)
+
+  // GeoJSON (Polygon/MultiPolygon). Coordenadas: [lng, lat]
+  geojson Json
+
+  // Bounding box para acelerar point-in-polygon
+  minLat Decimal @db.Decimal(10, 7)
+  minLng Decimal @db.Decimal(10, 7)
+  maxLat Decimal @db.Decimal(10, 7)
+  maxLng Decimal @db.Decimal(10, 7)
+
+  hubPrices    ZoneFixedPrice[] @relation("zone_hub")
+  targetPrices ZoneFixedPrice[] @relation("zone_target")
+  fixedHubRides RideRequest[]   @relation("ride_fixed_hub_zone")
+  fixedTargetRides RideRequest[] @relation("ride_fixed_target_zone")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, isHub])
+}
+
+model ZoneFixedPrice {
+  id           String      @id @default(cuid())
+  hubZoneId    String
+  targetZoneId String
+  serviceType  ServiceType
+  amountCop    Decimal     @db.Decimal(10, 2)
+  isActive     Boolean     @default(true)
+
+  hubZone    Zone @relation("zone_hub", fields: [hubZoneId], references: [id], onDelete: Cascade)
+  targetZone Zone @relation("zone_target", fields: [targetZoneId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([hubZoneId, targetZoneId, serviceType])
+  @@index([serviceType, isActive])
+}
+
+model RideCandidate {
+  id        String              @id @default(cuid())
+  rideId    String
+  driverId  String
+  status    RideCandidateStatus @default(OFFERED)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  ride   RideRequest   @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  driver DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@unique([rideId, driverId])
+  @@index([rideId, status, createdAt])
+  @@index([driverId, status, createdAt])
+}
+
+model RideOffer {
+  id                String      @id @default(cuid())
+  passengerId       String
+  serviceTypeWanted ServiceType
+  pickupLat         Decimal     @db.Decimal(10, 7)
+  pickupLng         Decimal     @db.Decimal(10, 7)
+  pickupAddress     String?
+  dropoffLat        Decimal     @db.Decimal(10, 7)
+  dropoffLng        Decimal     @db.Decimal(10, 7)
+  dropoffAddress    String?
+  distanceMeters    Int?
+  durationSeconds   Int?
+  routePath         Json?
+  estimatedPrice    Decimal     @db.Decimal(10, 2)
+  offeredPrice      Decimal     @db.Decimal(10, 2)
+  searchRadiusM     Int         @default(5000)
+  status            OfferStatus @default(OPEN)
+  expiresAt         DateTime?
+
+  committedDriverId String?
+  committedAt       DateTime?
+  rideId            String?     @unique
+
+  passenger       PassengerProfile @relation(fields: [passengerId], references: [id], onDelete: Cascade)
+  committedDriver DriverProfile?   @relation("offer_committed_driver", fields: [committedDriverId], references: [id])
+  ride            RideRequest?     @relation("offer_to_ride", fields: [rideId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([passengerId, status, createdAt])
+  @@index([committedDriverId])
+  @@index([status, createdAt])
+}
+
+model RideAddon {
+  id       String       @id @default(cuid())
+  rideId   String
+  addonId  String
+  ride     RideRequest  @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  addon    PricingAddon @relation(fields: [addonId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@unique([rideId, addonId])
+  @@index([addonId])
+}
+
+model Rating {
+  id         String          @id @default(cuid())
+  rideId     String
+  direction  RatingDirection
+  fromUserId String
+  toUserId   String
+  stars      Int
+  comment    String?
+  ride       RideRequest     @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  fromUser   User            @relation("ratings_from", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser     User            @relation("ratings_to", fields: [toUserId], references: [id], onDelete: Cascade)
+  createdAt  DateTime        @default(now())
+
+  @@unique([rideId, direction])
+  @@index([toUserId])
+}
+
+enum UserRole {
+  USER
+  DRIVER
+  ADMIN
+}
+
+enum PushPlatform {
+  ANDROID
+  IOS
+}
+
+enum ServiceType {
+  CARRO
+  MOTO
+  MOTO_CARGA
+  CARRO_CARGA
+}
+
+enum DriverStatus {
+  OBSERVATION
+  APPROVED
+  REJECTED
+}
+
+enum DocumentType {
+  LICENSE
+  VEHICLE_CERT
+  VEHICLE_PHOTO
+}
+
+enum RideStatus {
+  OPEN
+  ASSIGNED
+  ACCEPTED
+  MATCHED
+  IN_PROGRESS
+  CANCELLED
+  EXPIRED
+  COMPLETED
+}
+
+enum RideCandidateStatus {
+  OFFERED
+  REJECTED
+  WITHDRAWN
+  SELECTED
+}
+
+enum OfferStatus {
+  OPEN
+  COMMITTED
+  CANCELLED
+  EXPIRED
+}
+
+enum DriverCreditChargeMode {
+  SERVICE_VALUE
+  FIXED_AMOUNT
+}
+
+enum RatingDirection {
+  PASSENGER_TO_DRIVER
+  DRIVER_TO_PASSENGER
+}

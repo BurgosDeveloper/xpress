@@ -1,0 +1,182 @@
+Documento de Requerimientos – MVP App “Xpress Traslados”
+
+OBJETIVO GENERAL
+Desarrollar una Plataforma web de taxis y mototaxis tipo marketplace, liviana y funcional (MVP), La app permitirá conectar pasajeros y choferes mediante un sistema de subasta y contraofertas de precio en tiempo real. (disponible para Android (Play Store) y iOS (App Store)).
+
+PLATAFORMAS
+- Android (Play Store)
+- iOS (App Store)
+- Backend centralizado
+- Posible Web App administrativa y/o cliente (opcional)
+
+TIPOS DE USUARIO
+1. Cliente (Pasajero)
+2. Chofer (Taxi o Mototaxi)
+3. Administrador
+
+REGISTRO Y AUTENTICACIÓN
+Cliente:
+- Nombre
+- Correo electrónico
+- Teléfono
+- Fotografía (opcional)
+
+Chofer:
+- Nombre
+- Correo electrónico
+- Teléfono
+- Fotografía (obligatoria)
+- Tipo de servicio: Taxi o Moto
+
+- Datos del vehículo:
+  - Marca / Modelo
+  - Año
+  - Color
+  - Cantidad de puertas
+
+
+
+  - Aire acondicionado (sí/no)
+  - Maletera (sí/no)
+  - Permite mascotas (sí/no)
+
+- Documentos obligatorios:
+  - Licencia de conducir (foto)
+  - Certificado del vehículo
+  - Fotos del vehículo
+
+Estado del chofer:
+- En observación (por defecto)
+- Aprobado
+- Rechazado
+El administrador valida y aprueba/rechaza choferes.
+
+GEOLOCALIZACIÓN Y MAPA
+- Uso de Google Maps
+- Punto A: ubicación actual del cliente (editable por el pasajero)
+- Punto B: destino (selección por mapa o dirección escrita)
+- Trazado automático de ruta
+- Cálculo de distancia y tiempo estimado
+
+COTIZACIÓN DE CARRERA
+- Selección de tipo: Moto o Vehículo
+- Precio base calculado por la app
+- Filtros opcionales: (solo carros)
+  - Aire acondicionado
+  - Mascotas
+  - Maletera
+  (estos filtros pueden incrementar el precio)
+
+SUBASTA DE PRECIO
+- El pasajero puede:
+  - Aceptar el precio sugerido por la app
+  - Ofrecer un precio menor
+  - Ofrecer un precio mayor
+- La solicitud se envía a choferes disponibles en un radio de 2 km
+- Los choferes reciben notificación con:
+  - Ruta
+
+
+  - Precio ofrecido por el pasajero
+
+CHOFERES – RESPUESTA
+Cada chofer puede:
+- Aceptar el precio
+- Contraofertar con otro precio
+
+Al aceptar o contraofertar:
+- Se genera la ficha del chofer visible al pasajero
+
+FICHA DEL CHOFER (VISIBLE AL CLIENTE)
+- Foto
+- Nombre
+- Tipo de vehículo
+- Modelo
+- Características (AC, mascotas, etc.)
+- Precio ofrecido
+- Calificación (estrellas)
+- Comentarios
+- Tiempo visible de la ficha: 10 segundos (genera urgencia a la decisión del pasajero)
+
+Si desaparece:
+- El chofer puede volver a contraofertar
+- La ficha vuelve a mostrarse
+
+SELECCIÓN FINAL
+- El pasajero ve varias fichas
+- Selecciona el chofer que prefiera
+- Al hacer match:
+  - Se bloquean notificaciones a otros choferes
+  - Ambos reciben confirmación
+  - Tiempo estimado de llegada
+  - Se habilita chat (interno o WhatsApp)
+CHAT (para eliminar ansiedad de tiempos de llegada)
+- Comunicación directa pasajero–chofer
+- Puede ser:
+  - Chat interno
+  - Redirección a WhatsApp
+
+
+ROL DEL ADMINISTRADOR
+- Recibe notificación de TODAS las solicitudes
+- Ve:
+  - Carreras solicitadas
+  - Carreras aceptadas
+  - Match realizados
+  - Montos de cada carrera
+- Puede asignar manualmente choferes si lo desea
+
+FINALIZACIÓN Y CALIFICACIONES
+- 1 hora después del match:
+  - Notificación al pasajero para evaluar al chofer
+  - Notificación al chofer para evaluar al pasajero
+Calificación:
+- 1 a 5 estrellas
+- Comentario escrito
+
+HISTORIAL
+- Chofer:
+  - Historial de calificaciones visibles para clientes
+- Pasajero:
+  - Historial visible para choferes
+
+MÉTRICAS Y REPORTES (ADMIN)
+- Total de solicitudes
+- Total de match
+- Monto por carrera
+- Choferes con más servicios
+- Historial completo por fechas
+
+NOTIFICACIONES
+- Push notifications:
+  - Nuevas solicitudes
+  - Contraofertas
+  - Match confirmado
+  - Calificaciones pendientes
+- Notificación central al administrador
+
+ALCANCE MVP
+Incluye:
+- Plataforma Web
+App Cliente (opcional)
+App Chofer (opcional)
+- Panel Admin básico
+- Subasta y contraofertas
+- Geolocalización
+- Chat
+- Calificaciones
+- Historial y métricas básicas
+
+NO incluye (fase MVP):
+- Pagos en línea
+- Wallet
+- Facturación automática
+- Promociones avanzadas
+
+OBJETIVO DEL DOCUMENTO
+Este documento tiene como finalidad que el equipo de desarrollo:
+- Evalúe la complejidad técnica
+- Defina arquitectura
+- Estime tiempos de desarrollo
+- Presupueste costos aproximados del MVP
+

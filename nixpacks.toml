@@ -1,0 +1,19 @@
+# Fuerza a Railway/Nixpacks a tratar este repo como monorepo y
+# compilar/ejecutar el backend dentro de /backend.
+
+[phases.setup]
+# Node 20 LTS (incluye npm)
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = [
+  "cd backend && npm ci"
+]
+
+[phases.build]
+cmds = [
+  "cd backend && npm run build"
+]
+
+[start]
+cmd = "cd backend && npm run start:railway"

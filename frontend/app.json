@@ -1,0 +1,72 @@
+{
+  "expo": {
+    "name": "STAR TRASLADOS C.A",
+    "slug": "xpress",
+    "version": "1.0.20",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.star.trasladossc",
+      "buildNumber": "23",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "STAR TRASLADOS C.A usa tu ubicacion para mostrar el mapa, calcular rutas y actualizar tus viajes en tiempo real.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.star.trasladossc",
+      "versionCode": 23,
+      "googleServicesFile": "./google-services.json",
+      "blockedPermissions": [
+        "android.permission.CAMERA"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/icon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "enableBackgroundRemoteNotifications": false,
+          "sounds": [
+            "./assets/notifications/tienes_servicio.mp3",
+            "./assets/notifications/aceptar_servicio.mp3",
+            "./assets/notifications/uber_llego.mp3",
+            "./assets/notifications/disponibles.mp3"
+          ]
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "STAR TRASLADOS C.A usa tu ubicacion para mostrar el mapa, calcular rutas y actualizar tus viajes en tiempo real.",
+          "locationAlwaysAndWhenInUsePermission": "STAR TRASLADOS C.A usa tu ubicacion en segundo plano para que tus pasajeros y la operadora vean tu ubicacion en tiempo real durante el servicio.",
+          "isIosBackgroundLocationEnabled": true
+        }
+      ],
+      "@rnmapbox/maps",
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "bf22f95f-5fa2-4b14-a19a-53a285c97d66"
+      }
+    }
+  }
+}

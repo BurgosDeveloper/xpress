@@ -1,0 +1,29 @@
+services:
+  db:
+    image: mariadb:11
+    container_name: xpress_traslados_db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: xpress_traslados
+      MARIADB_USER: xpress
+      MARIADB_PASSWORD: xpresspass
+      MARIADB_ROOT_PASSWORD: rootpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - xpress_db_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    container_name: xpress_traslados_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
+volumes:
+  xpress_db_data:

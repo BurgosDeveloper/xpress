@@ -1,0 +1,4 @@
+-- Migration placeholder (restored)
+-- The schema change for this timestamp is already reflected in `prisma/schema.prisma`.
+-- This file was missing, which breaks `prisma migrate deploy`.
+-- No-op.

@@ -1,0 +1,14 @@
+-- CreateTable
+CREATE TABLE `AppConfig` (
+  `id` VARCHAR(191) NOT NULL,
+  `nightBaseFare` DECIMAL(10, 2) NOT NULL DEFAULT 0,
+  `nightStartHour` INTEGER NOT NULL DEFAULT 20,
+  `driverCreditChargeMode` ENUM('SERVICE_VALUE', 'FIXED_AMOUNT') NOT NULL DEFAULT 'SERVICE_VALUE',
+  `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` DATETIME(3) NOT NULL,
+
+  PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AlterTable
+ALTER TABLE `DriverProfile` ADD COLUMN `creditChargeFixedCop` INTEGER NULL;

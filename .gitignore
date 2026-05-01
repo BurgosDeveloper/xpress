@@ -1,0 +1,54 @@
+# Node / build outputs
+backend/node_modules/
+backend/dist/
+frontend/node_modules/
+frontend/dist/
+
+# Expo
+frontend/.expo/
+frontend/.expo-shared/
+
+# Env / local data
+backend/.env
+backend/uploads/
+backend/upload/
+
+# Root uploads (carpeta generada en runtime)
+upload/uploads/
+
+frontend/.env
+
+# Firebase (push)
+google-services.json
+frontend/google-services.json
+frontend/GoogleService-Info.plist
+GoogleService-Info.plist
+
+# Firebase Admin SDK (service account JSON)
+*firebase-adminsdk*.json
+
+# Android keystores (nunca commitear)
+*.keystore
+*.jks
+
+# Expo prebuild (generado)
+frontend/android/
+frontend/ios/
+
+# Export/artefactos de deploy antiguos
+export/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+
+# Notas locales auxiliares
+xpres_ios.txt

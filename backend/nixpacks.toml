@@ -1,0 +1,18 @@
+# Nixpacks config cuando el Root Directory del servicio es /backend
+
+[phases.setup]
+# Node 20 LTS (incluye npm)
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = [
+  "npm ci"
+]
+
+[phases.build]
+cmds = [
+  "npm run build"
+]
+
+[start]
+cmd = "npm run start:railway"

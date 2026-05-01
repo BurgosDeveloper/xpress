@@ -1,0 +1,30 @@
+bueno no hay problema con que la principal se llame asi, es para no perder esta sesion, asi que bueno ignoremos ese nombre y enfoquemosnos ahora en empezar a desarrollar el frontend para la aplicacion recuerda que es una aplicacion 100% netamente para mobiles asi que desde el inicio se ira probando en lan en un dispositivo movil para trabajar la funcionalidad desde el frontend desde ahi, entonces configura todo el entorno y define algunas cosas que seran repetitivas para que no tengas que generar duplicados recuerda que por el stack que utilzzamos de validar con zod, utilizar jwt, react.js, node.js, express.js debe ser netamente componentizado y modularizado con funcionalides decentralizadas cuando sean muchas diferentes en un solo script haciendo varios y llamandolos en el principal y centralizada cuando sea una funcinoalidad que se repite en muchas ocasiones.
+
+datos fundamentales para iniciar, como el lgo debe ir en la app en la parte de arriba a la izquierda deja el espacio en blanco ya que ahi ira el loco, puedes colocar una x para que el cliente sepa que ahi va su logo, luego los colores que vamos a utilizar son negro, dorado y blanco, debes combinarlos de manera que la app sea de fondo negro funcionalidades, botones, hovers, trazos, resplandores y diseños bonitos que agregues deben utilizar el dorado y para textos normales utilza blanco, por lo generar para darle un estilo con acabado me gustaria titulos en dorado con sombra blanca para que haga ese toque estetico, ademas para no utilizar stikers ni emogis utiliza muchos Ioicons para que no solo sea mas bonito visualmente si no para hacer la aplicacion mas facil de utilizar para los clientes, choferes y administrador.
+
+guiandote por el estilo y diseño que te doy empieza a diseñar pantalla por pantalla trabajando de manera componentizada y modularizada, asi que podemos empezar por la principal que debe ser no solo bonita y llamativa si no funcional y el fondo sea algo que se mueve lentamente commo pequeñas ruedas o algo asi, que no genere bugs para renderizar es la pantalla de login, contraseña perdida y registro, donde tenga los campos minimos para evitar que el cliente escriba mucho y se fastidie, recuerda que el registro es para los clientres ya que los choferes y admin van solo a login en el caso de login lo utilizan los 3 usuarios, en el caso de perdida de contraseña lo utilizan el usuario chofer y cliente y el de registro solo cliente donde al solicitar perdida de contraseña aparezca una panatalla que muestre los ultimos 3 dijistos de su telefono y un mensaje antes de eso explicando que al precionar el boton un operador le dara un codigo de recuperacion y al precionar el boton se genere, se envie un codigo que llegara a la cuenta del admin como notificacion la cual tenga un codigo de acceso y el admin precione en enviar codigo y lo mande al whatsApp de esa persona para darle el codigo, mientras que la persona cliente o chofer les aparece una pantalla de colocar codigo despues de haber enviado solicitar codigo y al colocar el codigo si coincide que les abra otra pantalla que sea de actualizar contraseña donde coloquen la contraseña nueva y luego la confirmacion de la misma y asi lo envie nuevamente al login para loguearse.
+
+Este flujo de funcionamiento y autenticacion debe realizarse complemente sin fallas en trasnmision de datos y envio de informacion y cuales son las pantallas principales que diseñaras antes de pasar a las pantallas para los usuarios ya que para cada usuario varian las pantallas, asi que empieza por:
+
+login [para los 3 usuarios]
+recuperar contraseña (pantalla de solicitar codigo, pantalla de colocar codigo, pantalla de actualizar contraseña) [funciona para usuarios chofer y cliente]
+crear cuenta (funciona para usuarios de tipo cliente nomas)
+
+asi que empieza siguiendo paso a paso y analizando mi mensaje cada que puedas para que no pierdas la secuencia, de todas maneras lo dejare en un .txt llamado prompt
+
+
+ok esta ejecucion tomala para solucionar bugs, errores y fallas que hayan en el sistema y mejorar el frontend para evitar bugs, los usuarios de chofer y cliente de prueba, son de prueba asi que crearlos mediante inyeccion sql con toda la data necesaria para que existan ya despues en produccion los choferes se crean unicamente con el usuario admin y los clientes desde crear usuario
+
+
+ADMIN
+
+Usuario: admin@xpress.local
+Clave: xpress_admin
+DRIVER (chofer)
+
+Usuario: chofer@xpress.local
+Clave: xpress_test
+USER (cliente/pasajero)
+
+Usuario: cliente@xpress.local
+Clave: xpress_test

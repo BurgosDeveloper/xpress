@@ -1,0 +1,27 @@
+# Archivos/carpetas a excluir del upload de EAS Build (patrón tipo .gitignore)
+
+# deps / caches
+node_modules/
+.expo/
+.expo-shared/
+
+# builds
+android/
+ios/
+dist/
+web-build/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Nota: NO ignorar google-services.json (se requiere para expo-notifications/FCM)
