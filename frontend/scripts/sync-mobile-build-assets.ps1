@@ -67,8 +67,10 @@ function Sync-BrandingAssets {
 
   $logoSource = Join-Path $uploadDir 'logo_xpress.png'
   $iconSource = Join-Path $uploadDir 'incon.png'
+  $zoeSource = Join-Path $uploadDir 'zoe.png'
   $logoDestination = Join-Path $assetsDir 'logo_xpress.png'
   $iconDestination = Join-Path $assetsDir 'icon.png'
+  $zoeDestination = Join-Path $assetsDir 'zoe.png'
 
   if (Test-Path $logoSource) {
     Copy-Item -Force -Path $logoSource -Destination $logoDestination
@@ -76,6 +78,10 @@ function Sync-BrandingAssets {
 
   if (Test-Path $iconSource) {
     Copy-Item -Force -Path $iconSource -Destination $iconDestination
+  }
+
+  if (Test-Path $zoeSource) {
+    Copy-Item -Force -Path $zoeSource -Destination $zoeDestination
   }
 }
 

@@ -86,4 +86,4 @@ No hace falta una Mac para ese flujo en la nube, pero si hacen falta una cuenta 
 - `watchPositionAsync` sigue siendo foreground-only en iOS, pero ahora el chofer usa `startLocationUpdatesAsync` en background para seguir reportando ubicacion cuando la app queda minimizada.
 - En iPhone, el chofer debe aceptar el permiso `Always` para que el tracking en segundo plano funcione.
 - La config actual ya no agrega `remote-notification` en iOS porque el push quedo pausado.
-- El bundle identifier actual esperado por backend/APNs es `com.star.trasladossc`.
+- El bundle identifier actual esperado por backend/APNs es `com.xpress.traslados.sc`.

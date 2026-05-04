@@ -15,7 +15,7 @@ Opcional:
 - `EXPO_PUBLIC_OSRM_BASE_URL` (por defecto usa `https://router.project-osrm.org`).
 
 En `frontend/.env` podés definir, por ejemplo:
-- `EXPO_PUBLIC_API_BASE_URL=https://xpress-production-c897.up.railway.app/api`
+- `EXPO_PUBLIC_API_BASE_URL=https://xpress-production-f0e7.up.railway.app/api`
 
 ## 2) Instalar Android SDK (una sola vez)
 Desde `frontend/`:
@@ -42,7 +42,7 @@ Salida esperada:
 Esta app registra el token nativo (FCM) con `expo-notifications` y el backend envía por Firebase Admin.
 
 Para que las push funcionen en el APK:
-- Crear un proyecto Firebase con el package `com.star.trasladossc`.
+- Crear un proyecto Firebase con el package `com.xpress.traslados.sc`.
 - Descargar `google-services.json` y colocarlo en la raiz del repo o en `frontend/google-services.json`.
 - El build local sincroniza automaticamente ese archivo a `frontend/android/app/google-services.json`.
 - Configurar el backend (Railway) con `FCM_SERVICE_ACCOUNT_JSON` o `FCM_SERVICE_ACCOUNT_JSON_B64` usando la service account del proyecto Firebase nuevo.

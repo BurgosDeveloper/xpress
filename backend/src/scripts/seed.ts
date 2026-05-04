@@ -53,19 +53,29 @@ async function main() {
   await ensurePricing();
 
   const username = "admin";
-  const email = "admin@xpress.local";
+  const email = "admin@xpress.com";
   const password = "xpress_admin";
+  const passwordHash = await bcrypt.hash(password, 10);
 
   const existing = await prisma.user.findFirst({
-    where: { OR: [{ username }, { email }] },
+    where: { OR: [{ username }, { email }, { role: "ADMIN" }] },
     select: { id: true, username: true, email: true, role: true },
   });
 
   if (existing) {
+    const updated = await prisma.user.update({
+      where: { id: existing.id },
+      data: {
+        username,
+        email,
+        passwordHash,
+        role: "ADMIN",
+      },
+      select: { id: true, username: true, email: true, role: true },
+    });
     // eslint-disable-next-line no-console
-    console.log("[seed] admin already exists", existing);
+    console.log("[seed] updated admin", updated);
   } else {
-    const passwordHash = await bcrypt.hash(password, 10);
     const created = await prisma.user.create({
       data: {
         username,

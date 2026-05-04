@@ -67,9 +67,18 @@ if (-not $releaseSigningConfigured) {
   Write-Warning 'No detecté keystore release en variables XPRESS_UPLOAD_*. Gradle puede caer al debug keystore. Eso sirve para pruebas locales, pero revisa la firma antes de subir a Play Console.'
 }
 
+foreach ($stalePath in @(
+  (Join-Path $androidDir 'build'),
+  (Join-Path $androidDir 'app\build')
+)) {
+  if (Test-Path $stalePath) {
+    Remove-Item -Recurse -Force $stalePath
+  }
+}
+
 Push-Location $androidDir
 try {
-  .\gradlew.bat :app:clean :app:assembleRelease :app:bundleRelease --no-daemon
+  .\gradlew.bat clean :app:assembleRelease :app:bundleRelease --no-daemon
   if ($LASTEXITCODE -ne 0) {
     throw "Gradle fallo con codigo $LASTEXITCODE. Revisa la salida arriba (por ej. tokens de Mapbox / dependencias)."
   }

@@ -5,7 +5,7 @@ import { playNotificationSound } from "./soundPlayer";
 
 export const ANDROID_SILENT_CHANNEL_ID = "xpress_silent_v3";
 
-const BRAND_NAME = "STAR TRASLADOS C.A";
+const BRAND_NAME = "Xpress Traslados";
 
 export function androidSoundChannelId(soundName: SoundName) {
   return `xpress_sound_${soundName}_v3`;

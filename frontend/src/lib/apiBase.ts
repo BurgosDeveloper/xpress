@@ -1,6 +1,14 @@
 const API_SUFFIX = "/api";
 
-const DEFAULT_PROD_API_BASE_URL = "https://xpress-production-c897.up.railway.app/api";
+const DEFAULT_PROD_API_BASE_URL = "https://xpress-production-f0e7.up.railway.app/api";
+
+function normalizeApiBaseUrl(raw: string) {
+  const trimmed = raw.trim().replace(/\/+$/, "");
+  if (!trimmed) return "";
+
+  const withProtocol = /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  return withProtocol.endsWith(API_SUFFIX) ? withProtocol : `${withProtocol}${API_SUFFIX}`;
+}
 
 function guessLanApiBaseUrl() {
   try {
@@ -21,10 +29,10 @@ function guessLanApiBaseUrl() {
 
 export function getApiBaseUrl() {
   const fromEnv = process.env.EXPO_PUBLIC_API_BASE_URL;
-  if (fromEnv && fromEnv.trim()) return fromEnv.trim();
+  if (fromEnv && fromEnv.trim()) return normalizeApiBaseUrl(fromEnv);
 
   // Default: Railway (para que Expo Go local funcione sin levantar backend local)
-  if (DEFAULT_PROD_API_BASE_URL) return DEFAULT_PROD_API_BASE_URL;
+  if (DEFAULT_PROD_API_BASE_URL) return normalizeApiBaseUrl(DEFAULT_PROD_API_BASE_URL);
 
   const guessed = guessLanApiBaseUrl();
   if (guessed) return guessed;

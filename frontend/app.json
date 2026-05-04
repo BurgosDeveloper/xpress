@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "STAR TRASLADOS C.A",
+    "name": "Xpress Traslados",
     "slug": "xpress",
     "version": "1.0.20",
     "orientation": "portrait",
@@ -14,15 +14,15 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.star.trasladossc",
+      "bundleIdentifier": "com.xpress.traslados.sc",
       "buildNumber": "23",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "STAR TRASLADOS C.A usa tu ubicacion para mostrar el mapa, calcular rutas y actualizar tus viajes en tiempo real.",
+        "NSLocationWhenInUseUsageDescription": "Xpress Traslados usa tu ubicacion para mostrar el mapa, calcular rutas y actualizar tus viajes en tiempo real.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.star.trasladossc",
+      "package": "com.xpress.traslados.sc",
       "versionCode": 23,
       "googleServicesFile": "./google-services.json",
       "blockedPermissions": [
@@ -55,8 +55,8 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "STAR TRASLADOS C.A usa tu ubicacion para mostrar el mapa, calcular rutas y actualizar tus viajes en tiempo real.",
-          "locationAlwaysAndWhenInUsePermission": "STAR TRASLADOS C.A usa tu ubicacion en segundo plano para que tus pasajeros y la operadora vean tu ubicacion en tiempo real durante el servicio.",
+          "locationWhenInUsePermission": "Xpress Traslados usa tu ubicacion para mostrar el mapa, calcular rutas y actualizar tus viajes en tiempo real.",
+          "locationAlwaysAndWhenInUsePermission": "Xpress Traslados usa tu ubicacion en segundo plano para que tus pasajeros y la operadora vean tu ubicacion en tiempo real durante el servicio.",
           "isIosBackgroundLocationEnabled": true
         }
       ],
