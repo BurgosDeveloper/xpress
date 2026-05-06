@@ -10,6 +10,9 @@ import type { MapPoint } from "./MapPreviewModal";
 
 type Point = { lat: number; lng: number };
 
+const LIVE_ROUTE_START_MIN_METERS = 25;
+const LIVE_ROUTE_REFRESH_MIN_METERS = 20;
+
 function regionFromCenter(center: MapPoint): Region {
   return { latitude: center.lat, longitude: center.lng, latitudeDelta: 0.03, longitudeDelta: 0.03 };
 }
@@ -32,8 +35,20 @@ function downsample(path: MapPoint[], maxPoints: number) {
   return out.length > max ? out.slice(0, max) : out;
 }
 
-function computeCenter(pickup: Point, dropoff: Point, route?: MapPoint[] | null): MapPoint {
-  const points = (route?.length ? route : null) ?? [pickup, dropoff];
+function haversineMeters(from: Point, to: Point) {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const earthRadius = 6371000;
+  const dLat = toRad(to.lat - from.lat);
+  const dLng = toRad(to.lng - from.lng);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(from.lat)) * Math.cos(toRad(to.lat)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(earthRadius * c);
+}
+
+function computeCenter(origin: Point, dropoff: Point, route?: MapPoint[] | null): MapPoint {
+  const points = (route?.length ? route : null) ?? [origin, dropoff];
   const minLat = Math.min(...points.map((p) => p.lat));
   const maxLat = Math.max(...points.map((p) => p.lat));
   const minLng = Math.min(...points.map((p) => p.lng));
@@ -41,7 +56,14 @@ function computeCenter(pickup: Point, dropoff: Point, route?: MapPoint[] | null)
   return { lat: (minLat + maxLat) / 2, lng: (minLng + maxLng) / 2 };
 }
 
-export function MiniRouteMap(props: { pickup: Point; dropoff: Point; height?: number; routePath?: Point[] | null }) {
+export function MiniRouteMap(props: {
+  pickup: Point;
+  dropoff: Point;
+  height?: number;
+  routePath?: Point[] | null;
+  currentPosition?: Point | null;
+  currentPositionTitle?: string;
+}) {
   const height = props.height ?? 130;
 
   const [route, setRoute] = useState<MapPoint[] | null>(null);
@@ -49,12 +71,27 @@ export function MiniRouteMap(props: { pickup: Point; dropoff: Point; height?: nu
 
   const mapRef = useRef<AppMapRef | null>(null);
   const userInteractedRef = useRef(false);
+  const lastLiveOriginRef = useRef<MapPoint | null>(null);
+
+  const liveOrigin = useMemo(() => {
+    const point = props.currentPosition;
+    if (!point) return null;
+    if (!Number.isFinite(point.lat) || !Number.isFinite(point.lng)) return null;
+    return { lat: point.lat, lng: point.lng };
+  }, [props.currentPosition?.lat, props.currentPosition?.lng]);
+
+  const shouldUseLiveRoute = useMemo(() => {
+    if (!liveOrigin) return false;
+    return haversineMeters(liveOrigin, props.pickup) >= LIVE_ROUTE_START_MIN_METERS;
+  }, [liveOrigin?.lat, liveOrigin?.lng, props.pickup.lat, props.pickup.lng]);
+
+  const routeOrigin = shouldUseLiveRoute && liveOrigin ? liveOrigin : props.pickup;
 
   useEffect(() => {
     let cancelled = false;
 
     async function run() {
-      if (Array.isArray(props.routePath) && props.routePath.length >= 2) {
+      if (!shouldUseLiveRoute && Array.isArray(props.routePath) && props.routePath.length >= 2) {
         const coords = props.routePath
           .map((p) => {
             if (!p || typeof p.lat !== "number" || typeof p.lng !== "number") return null;
@@ -62,11 +99,22 @@ export function MiniRouteMap(props: { pickup: Point; dropoff: Point; height?: nu
           })
           .filter(Boolean) as MapPoint[];
 
+        lastLiveOriginRef.current = null;
         if (!cancelled) setRoute(coords.length >= 2 ? downsample(coords, 200) : null);
         return;
       }
 
-      const res = await getDrivingRoute({ from: props.pickup, to: props.dropoff });
+      if (shouldUseLiveRoute && liveOrigin) {
+        const lastOrigin = lastLiveOriginRef.current;
+        if (lastOrigin && haversineMeters(lastOrigin, liveOrigin) < LIVE_ROUTE_REFRESH_MIN_METERS) {
+          return;
+        }
+        lastLiveOriginRef.current = liveOrigin;
+      } else {
+        lastLiveOriginRef.current = null;
+      }
+
+      const res = await getDrivingRoute({ from: routeOrigin, to: props.dropoff });
       if (cancelled) return;
       setRoute(res?.path?.length ? downsample(res.path.map((p) => ({ lat: p.latitude, lng: p.longitude })), 200) : null);
     }
@@ -75,20 +123,112 @@ export function MiniRouteMap(props: { pickup: Point; dropoff: Point; height?: nu
     return () => {
       cancelled = true;
     };
-  }, [props.pickup.lat, props.pickup.lng, props.dropoff.lat, props.dropoff.lng, props.routePath]);
+  }, [
+    props.pickup.lat,
+    props.pickup.lng,
+    props.dropoff.lat,
+    props.dropoff.lng,
+    props.routePath,
+    props.currentPosition?.lat,
+    props.currentPosition?.lng,
+    routeOrigin.lat,
+    routeOrigin.lng,
+    liveOrigin?.lat,
+    liveOrigin?.lng,
+    shouldUseLiveRoute,
+  ]);
 
   const center = useMemo(
-    () => computeCenter(props.pickup, props.dropoff, route),
-    [props.pickup.lat, props.pickup.lng, props.dropoff.lat, props.dropoff.lng, route]
+    () => computeCenter(routeOrigin, props.dropoff, route),
+    [routeOrigin.lat, routeOrigin.lng, props.dropoff.lat, props.dropoff.lng, route]
   );
 
   const fitCoords = useMemo(() => {
-    const line = route?.length ? route : [props.pickup, props.dropoff];
+    const line = route?.length ? route : [routeOrigin, props.dropoff];
     const coords = line
       .filter((p) => p && Number.isFinite(p.lat) && Number.isFinite(p.lng))
       .map(toLatLng);
     return coords.length >= 2 ? coords : null;
-  }, [route, props.pickup, props.dropoff]);
+  }, [route, routeOrigin.lat, routeOrigin.lng, props.dropoff.lat, props.dropoff.lng]);
+
+  const markers = useMemo(() => {
+    const out: AppMapMarker[] = [];
+
+    if (shouldUseLiveRoute && liveOrigin) {
+      out.push({
+        id: "current",
+        coordinate: toLatLng(liveOrigin),
+        pinColor: colors.gold,
+        children: (
+          <View style={[styles.badge, styles.badgeCurrent]}>
+            <Ionicons name="navigate" size={14} color={colors.text} />
+          </View>
+        ),
+      });
+    } else {
+      out.push({
+        id: "pickup",
+        coordinate: toLatLng(props.pickup),
+        pinColor: colors.gold,
+        children: (
+          <View style={[styles.badge, styles.badgeA]}>
+            <Text style={styles.badgeText}>A</Text>
+          </View>
+        ),
+      });
+    }
+
+    out.push({
+      id: "dropoff",
+      coordinate: toLatLng(props.dropoff),
+      pinColor: colors.text,
+      children: (
+        <View style={[styles.badge, styles.badgeB]}>
+          <Text style={styles.badgeText}>B</Text>
+        </View>
+      ),
+    });
+
+    return out;
+  }, [shouldUseLiveRoute, liveOrigin?.lat, liveOrigin?.lng, props.pickup.lat, props.pickup.lng, props.dropoff.lat, props.dropoff.lng]);
+
+  const previewMarkers = useMemo(() => {
+    const out = [] as Array<{ id: string; coordinate: Point; title: string; pinColor: string }>;
+
+    if (shouldUseLiveRoute && liveOrigin) {
+      out.push({
+        id: "current",
+        coordinate: liveOrigin,
+        title: props.currentPositionTitle ?? "En ruta",
+        pinColor: colors.gold,
+      });
+    } else {
+      out.push({
+        id: "pickup",
+        coordinate: props.pickup,
+        title: "A",
+        pinColor: colors.gold,
+      });
+    }
+
+    out.push({
+      id: "dropoff",
+      coordinate: props.dropoff,
+      title: "B",
+      pinColor: colors.text,
+    });
+
+    return out;
+  }, [
+    shouldUseLiveRoute,
+    liveOrigin?.lat,
+    liveOrigin?.lng,
+    props.pickup.lat,
+    props.pickup.lng,
+    props.dropoff.lat,
+    props.dropoff.lng,
+    props.currentPositionTitle,
+  ]);
 
   useEffect(() => {
     if (userInteractedRef.current) return;
@@ -123,33 +263,12 @@ export function MiniRouteMap(props: { pickup: Point; dropoff: Point; height?: nu
         polyline={
           ({
             id: "mini-route",
-            coordinates: (route?.length ? route : [props.pickup, props.dropoff]).map(toLatLng),
+            coordinates: (route?.length ? route : [routeOrigin, props.dropoff]).map(toLatLng),
             strokeColor: colors.gold,
             strokeWidth: 4,
           }) satisfies AppMapPolyline
         }
-        markers={[
-          {
-            id: "pickup",
-            coordinate: toLatLng(props.pickup),
-            pinColor: colors.gold,
-            children: (
-              <View style={[styles.badge, styles.badgeA]}>
-                <Text style={styles.badgeText}>A</Text>
-              </View>
-            ),
-          } satisfies AppMapMarker,
-          {
-            id: "dropoff",
-            coordinate: toLatLng(props.dropoff),
-            pinColor: colors.text,
-            children: (
-              <View style={[styles.badge, styles.badgeB]}>
-                <Text style={styles.badgeText}>B</Text>
-              </View>
-            ),
-          } satisfies AppMapMarker,
-        ]}
+        markers={markers}
       />
 
       <Pressable
@@ -165,24 +284,11 @@ export function MiniRouteMap(props: { pickup: Point; dropoff: Point; height?: nu
         visible={previewVisible}
         onClose={() => setPreviewVisible(false)}
         title="Ruta"
-        markers={[
-          {
-            id: "pickup",
-            coordinate: props.pickup,
-            title: "A",
-            pinColor: colors.gold,
-          },
-          {
-            id: "dropoff",
-            coordinate: props.dropoff,
-            title: "B",
-            pinColor: colors.text,
-          },
-        ]}
+        markers={previewMarkers}
         polyline={
           route?.length
             ? route
-            : [props.pickup, props.dropoff]
+            : [routeOrigin, props.dropoff]
         }
       />
     </View>
@@ -229,6 +335,10 @@ const styles = StyleSheet.create({
   },
   badgeB: {
     borderColor: colors.border,
+  },
+  badgeCurrent: {
+    borderColor: colors.gold,
+    backgroundColor: colors.card,
   },
   badgeText: {
     color: colors.text,

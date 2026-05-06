@@ -70,6 +70,7 @@ export async function getActiveRideForRequester(params: { requester: { id: strin
             userId: true,
             serviceType: true,
             vehicle: true,
+            location: true,
             mobilePayBank: true,
             mobilePayDocument: true,
             mobilePayPhone: true,

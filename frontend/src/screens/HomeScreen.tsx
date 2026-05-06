@@ -1166,6 +1166,84 @@ export function HomeScreen({ navigation }: Props) {
     return formatSecondaryFromCop(Number(meterPriceToShow), auth.appConfig ?? {});
   }, [meterPriceToShow, auth.appConfig]);
 
+  function parseRidePoint(latValue: unknown, lngValue: unknown) {
+    const lat = Number(latValue);
+    const lng = Number(lngValue);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    return { lat, lng };
+  }
+
+  const attentionRideStatus = String(attentionRide?.status ?? "");
+
+  const attentionRidePickup = useMemo(
+    () => parseRidePoint(attentionRide?.pickupLat, attentionRide?.pickupLng),
+    [attentionRide?.pickupLat, attentionRide?.pickupLng]
+  );
+
+  const attentionRideDropoff = useMemo(
+    () => parseRidePoint(attentionRide?.dropoffLat, attentionRide?.dropoffLng),
+    [attentionRide?.dropoffLat, attentionRide?.dropoffLng]
+  );
+
+  const attentionRideRoutePath = useMemo(() => {
+    const raw = attentionRide?.routePath ?? attentionRide?.offer?.routePath ?? null;
+    return Array.isArray(raw) && raw.length >= 2 ? raw : null;
+  }, [attentionRide?.routePath, attentionRide?.offer?.routePath]);
+
+  const attentionRideCurrentPosition = useMemo(() => {
+    if (attentionRideStatus !== "IN_PROGRESS") return null;
+
+    if (role === "DRIVER") {
+      return driverCoords && Number.isFinite(driverCoords.lat) && Number.isFinite(driverCoords.lng) ? driverCoords : null;
+    }
+
+    if (role === "USER") {
+      return parseRidePoint(attentionRide?.matchedDriver?.location?.lat, attentionRide?.matchedDriver?.location?.lng);
+    }
+
+    return null;
+  }, [
+    attentionRideStatus,
+    role,
+    driverCoords?.lat,
+    driverCoords?.lng,
+    attentionRide?.matchedDriver?.location?.lat,
+    attentionRide?.matchedDriver?.location?.lng,
+  ]);
+
+  const shouldShowAttentionRideRoute = useMemo(() => {
+    if (!attentionRidePickup || !attentionRideDropoff) return false;
+    return (
+      attentionRideStatus === "OPEN" ||
+      attentionRideStatus === "ASSIGNED" ||
+      attentionRideStatus === "MATCHED" ||
+      attentionRideStatus === "ACCEPTED" ||
+      attentionRideStatus === "IN_PROGRESS"
+    );
+  }, [attentionRidePickup, attentionRideDropoff, attentionRideStatus]);
+
+  function renderAttentionRideRouteBox(currentPositionTitle: string) {
+    if (!shouldShowAttentionRideRoute || !attentionRidePickup || !attentionRideDropoff) return null;
+
+    return (
+      <View style={styles.meterBox}>
+        <View style={styles.meterTitleRow}>
+          <Ionicons name="map-outline" size={16} color={colors.gold} />
+          <Text style={styles.meterTitle}>Ruta</Text>
+        </View>
+
+        <MiniRouteMap
+          pickup={attentionRidePickup}
+          dropoff={attentionRideDropoff}
+          routePath={(attentionRideRoutePath ?? null) as any}
+          currentPosition={attentionRideCurrentPosition}
+          currentPositionTitle={currentPositionTitle}
+          height={140}
+        />
+      </View>
+    );
+  }
+
   async function driverAction(action: "accept" | "start" | "complete") {
     if (!token || !attentionRide) return;
     setRideActionLoading(true);
@@ -1364,6 +1442,12 @@ export function HomeScreen({ navigation }: Props) {
                 </>
               ) : null}
 
+              {shouldShowAttentionRideRoute ? (
+                <View style={{ marginTop: 10 }}>
+                  {renderAttentionRideRouteBox(role === "USER" ? "Ejecutivo" : "Tú")}
+                </View>
+              ) : null}
+
               {role === "USER" && (attentionRide.status === "OPEN" || attentionRide.status === "ASSIGNED" || attentionRide.status === "ACCEPTED" || attentionRide.status === "MATCHED") ? (
                 <View style={{ marginTop: 10 }}>
                   <SecondaryButton
@@ -1416,26 +1500,6 @@ export function HomeScreen({ navigation }: Props) {
                         </View>
                       ) : null}
 
-                      {attentionRide.offer ? (
-                        <View style={styles.meterBox}>
-                          <View style={styles.meterTitleRow}>
-                            <Ionicons name="map-outline" size={16} color={colors.gold} />
-                            <Text style={styles.meterTitle}>Ruta</Text>
-                          </View>
-
-                          <MiniRouteMap
-                            pickup={{ lat: Number(attentionRide.pickupLat), lng: Number(attentionRide.pickupLng) }}
-                            dropoff={{ lat: Number(attentionRide.dropoffLat), lng: Number(attentionRide.dropoffLng) }}
-                            routePath={(attentionRide.routePath ?? attentionRide.offer?.routePath ?? null) as any}
-                            height={140}
-                          />
-
-                          {attentionRide.agreedPrice != null ? (
-                            <Text style={styles.meterBigLine}>Monto acordado: {formatCop(Number(attentionRide.agreedPrice))}</Text>
-                          ) : null}
-                        </View>
-                      ) : null}
-
                       <PrimaryButton
                         label={rideActionLoading ? "Procesando..." : "Iniciar carrera"}
                         onPress={() => void driverAction("start")}
@@ -1452,25 +1516,7 @@ export function HomeScreen({ navigation }: Props) {
 
                   {attentionRide.status === "IN_PROGRESS" ? (
                     <>
-                      {attentionRide.offer ? (
-                        <View style={styles.meterBox}>
-                          <View style={styles.meterTitleRow}>
-                            <Ionicons name="map-outline" size={16} color={colors.gold} />
-                            <Text style={styles.meterTitle}>Ruta</Text>
-                          </View>
-
-                          <MiniRouteMap
-                            pickup={{ lat: Number(attentionRide.pickupLat), lng: Number(attentionRide.pickupLng) }}
-                            dropoff={{ lat: Number(attentionRide.dropoffLat), lng: Number(attentionRide.dropoffLng) }}
-                            routePath={(attentionRide.routePath ?? attentionRide.offer?.routePath ?? null) as any}
-                            height={140}
-                          />
-
-                          {attentionRide.agreedPrice != null ? (
-                            <Text style={styles.meterBigLine}>Monto acordado: {formatCop(Number(attentionRide.agreedPrice))}</Text>
-                          ) : null}
-                        </View>
-                      ) : attentionRide.isFixedPrice ? (
+                      {attentionRide.isFixedPrice ? (
                         <View style={styles.meterBox}>
                           <View style={styles.meterTitleRow}>
                             <Ionicons name="cash-outline" size={16} color={colors.gold} />

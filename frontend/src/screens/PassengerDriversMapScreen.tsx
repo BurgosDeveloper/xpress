@@ -568,29 +568,6 @@ export function PassengerDriversMapScreen({ navigation }: Props) {
 
   return (
     <Screen style={{ padding: 0 }}>
-      <View style={styles.topBar}>
-        <View style={styles.topBarLeft}>
-          <Ionicons name="map-outline" size={18} color={colors.gold} />
-          <GoldTitle>Ejecutivos cercanos</GoldTitle>
-        </View>
-
-        <View style={styles.topBarRight}>
-          <Pressable
-            style={({ pressed }) => [styles.locateBtn, pressed && styles.pressed]}
-            onPress={requestRecenter}
-            accessibilityRole="button"
-            accessibilityLabel="Centrar en mi ubicación"
-          >
-            <Ionicons name="locate-outline" size={18} color={colors.gold} />
-          </Pressable>
-
-          <Pressable style={styles.operatorBtn} onPress={() => void openOperator()}>
-            <Image source={zoeImg} style={styles.operatorImg} resizeMode="contain" />
-            <Text style={styles.operatorText}>ZOE</Text>
-          </Pressable>
-        </View>
-      </View>
-
       <View style={styles.mapWrap}>
         {(() => {
           const rawRoutePath = estimate?.routePath?.length ? estimate.routePath : routePreview?.routePath?.length ? routePreview.routePath : null;
@@ -703,6 +680,47 @@ export function PassengerDriversMapScreen({ navigation }: Props) {
           </View>
         ) : null}
 
+        <Pressable
+          style={({ pressed }) => [styles.locateBtn, styles.locateBtnFloating, pressed && styles.pressed]}
+          onPress={requestRecenter}
+          accessibilityRole="button"
+          accessibilityLabel="Centrar en mi ubicación"
+        >
+          <Ionicons name="locate-outline" size={18} color={colors.gold} />
+        </Pressable>
+
+        <Pressable style={[styles.operatorBtn, styles.operatorBtnFloating]} onPress={() => void openOperator()}>
+          <Image source={zoeImg} style={styles.operatorImg} resizeMode="contain" />
+          <Text style={styles.operatorText}>ZOE</Text>
+        </Pressable>
+
+        <View style={styles.typeBar}>
+          {(["CARRO", "MOTO", "MOTO_CARGA", "CARRO_CARGA"] as const).map((t) => {
+            const active = wantedType === t;
+            const iconColor = active ? colors.gold : colors.mutedText;
+            const textColor = active ? colors.gold : colors.mutedText;
+
+            return (
+              <Pressable
+                key={t}
+                style={[styles.typeBtn, active ? styles.typeBtnActive : null]}
+                onPress={() => void onSelectServiceType(t)}
+              >
+                <View style={styles.typeIconWrap}>
+                  <Ionicons name={serviceTypeIconName(t)} size={18} color={iconColor} />
+                  {serviceTypeHasCargo(t) ? (
+                    <View style={styles.typeCargoBadge}>
+                      <Ionicons name="cube-outline" size={11} color={iconColor} />
+                    </View>
+                  ) : null}
+                </View>
+
+                <Text style={[styles.typeText, { color: textColor }]}>{serviceTypeLabel(t)}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
         <View style={styles.estimateBar}>
           <Card style={{ gap: 8 }}>
             <PrimaryButton
@@ -735,40 +753,13 @@ export function PassengerDriversMapScreen({ navigation }: Props) {
           </Card>
         </View>
 
-        <View style={styles.typeBar}>
-          {(["CARRO", "MOTO", "MOTO_CARGA", "CARRO_CARGA"] as const).map((t) => {
-            const active = wantedType === t;
-            const iconColor = active ? colors.gold : colors.mutedText;
-            const textColor = active ? colors.gold : colors.mutedText;
-
-            return (
-              <Pressable
-                key={t}
-                style={[styles.typeBtn, active ? styles.typeBtnActive : null]}
-                onPress={() => void onSelectServiceType(t)}
-              >
-                <View style={styles.typeIconWrap}>
-                  <Ionicons name={serviceTypeIconName(t)} size={18} color={iconColor} />
-                  {serviceTypeHasCargo(t) ? (
-                    <View style={styles.typeCargoBadge}>
-                      <Ionicons name="cube-outline" size={11} color={iconColor} />
-                    </View>
-                  ) : null}
-                </View>
-
-                <Text style={[styles.typeText, { color: textColor }]}>{serviceTypeLabel(t)}</Text>
-              </Pressable>
-            );
-          })}
+        <View style={styles.requestBar}>
+          <PrimaryButton
+            label={requesting ? "Solicitando..." : "Solicitar ejecutivos disponibles"}
+            onPress={() => void requestAvailableExecutives()}
+            disabled={requesting || loadingLocation || !dropoff}
+          />
         </View>
-      </View>
-
-      <View style={styles.requestBar}>
-        <PrimaryButton
-          label={requesting ? "Solicitando..." : "Solicitar ejecutivos disponibles"}
-          onPress={() => void requestAvailableExecutives()}
-          disabled={requesting || loadingLocation || !dropoff}
-        />
       </View>
 
       {selected ? (
@@ -812,24 +803,6 @@ export function PassengerDriversMapScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  topBar: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  topBarLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  topBarRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
   locateBtn: {
     width: 52,
     height: 52,
@@ -844,6 +817,11 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
+  locateBtnFloating: {
+    position: "absolute",
+    top: 16,
+    left: 16,
+  },
   operatorBtn: {
     alignItems: "center",
     justifyContent: "center",
@@ -857,6 +835,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 6,
     elevation: 2,
+  },
+  operatorBtnFloating: {
+    position: "absolute",
+    top: 16,
+    right: 16,
   },
   operatorImg: {
     width: 46,
@@ -875,13 +858,10 @@ const styles = StyleSheet.create({
   mapWrap: {
     flex: 1,
     position: "relative",
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: colors.border,
   },
   loadingOverlay: {
     position: "absolute",
-    top: 12,
+    top: 108,
     left: 16,
     right: 16,
     backgroundColor: colors.card,
@@ -913,7 +893,7 @@ const styles = StyleSheet.create({
   },
   errorOverlay: {
     position: "absolute",
-    top: 12,
+    top: 108,
     left: 16,
     right: 16,
     backgroundColor: colors.card,
@@ -930,7 +910,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 16,
     right: 16,
-    bottom: 104,
+    bottom: 90,
   },
   estimateBigRow: {
     flexDirection: "row",
@@ -963,25 +943,19 @@ const styles = StyleSheet.create({
   typeBar: {
     position: "absolute",
     left: 16,
-    right: 16,
-    bottom: 12,
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 10,
+    right: 108,
+    top: 16,
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    shadowColor: colors.text,
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
-    elevation: 2,
+    alignItems: "flex-start",
+    justifyContent: "flex-start",
+    flexWrap: "wrap",
+    gap: 8,
   },
   typeBtn: {
     alignItems: "center",
     justifyContent: "center",
-    width: 74,
+    minWidth: 64,
+    paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 14,
     borderWidth: 1,
@@ -1008,11 +982,10 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   requestBar: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bg,
+    position: "absolute",
+    left: 16,
+    right: 16,
+    bottom: 16,
   },
   sheet: {
     padding: 16,
