@@ -77,6 +77,12 @@ function main() {
   const migrateCode = run(process.execPath, [prismaCli, 'migrate', 'deploy'], { DATABASE_URL: migrationDbUrl })
   if (migrateCode !== 0) process.exit(migrateCode)
 
+  console.log('[railway] running automatic zone import')
+  const importCode = run(process.execPath, ['scripts/import-zones.js'], { DATABASE_URL: process.env.DATABASE_URL })
+  if (importCode !== 0) {
+    console.warn('[railway] warning: zone import failed but starting server anyway')
+  }
+
   console.log('[railway] starting server')
   const node = process.execPath
   const startCode = run(node, ['dist/server.js'], { DATABASE_URL: process.env.DATABASE_URL })
