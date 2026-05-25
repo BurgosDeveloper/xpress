@@ -18,13 +18,12 @@ ok esta ejecucion tomala para solucionar bugs, errores y fallas que hayan en el 
 
 ADMIN
 
-Usuario: admin@xpress.local
-Clave: xpress_admin
+Usuario: admin@star.com
+Clave: star_admin
 DRIVER (chofer)
-
-Usuario: chofer@xpress.local
-Clave: xpress_test
+Usuario: ejec@star.com
+Clave: star_ejec
 USER (cliente/pasajero)
+Usuario: cli@star.com
+Clave: star_cli
 
-Usuario: cliente@xpress.local
-Clave: xpress_test
