@@ -67,7 +67,7 @@ function guessNameFromFilename(file: string) {
 
 async function main() {
   const arg = process.argv[2];
-  const zonesDir = arg ? path.resolve(process.cwd(), arg) : path.resolve(__dirname, "..", "..", "..", "json", "zones");
+  const zonesDir = arg ? path.resolve(process.cwd(), arg) : path.resolve(__dirname, "..", "..", "json", "zones");
 
   if (!fs.existsSync(zonesDir) || !fs.statSync(zonesDir).isDirectory()) {
     // eslint-disable-next-line no-console

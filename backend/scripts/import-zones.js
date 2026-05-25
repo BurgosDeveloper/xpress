@@ -134,8 +134,8 @@ function guessNameFromFilename(file) {
 async function main() {
   const arg = process.argv[2]
 
-  // repoRoot/json/zones (repoRoot es padre de backend/)
-  const defaultZonesDir = path.resolve(__dirname, '..', '..', 'json', 'zones')
+  // backend/json/zones
+  const defaultZonesDir = path.resolve(__dirname, '..', 'json', 'zones')
   const zonesDir = arg ? path.resolve(process.cwd(), arg) : defaultZonesDir
 
   if (!fs.existsSync(zonesDir) || !fs.statSync(zonesDir).isDirectory()) {
